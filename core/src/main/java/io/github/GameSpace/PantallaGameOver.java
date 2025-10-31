@@ -5,18 +5,24 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.Align;
 
 
 public class PantallaGameOver implements Screen {
 
 	private SpaceNavigation game;
 	private OrthographicCamera camera;
+	private Viewport viewport;
+	private int rondaFinal;
 
-	public PantallaGameOver(SpaceNavigation game) {
+	public PantallaGameOver(SpaceNavigation game, int rondaFinal) {
 		this.game = game;
+		this.rondaFinal = rondaFinal;
         
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 1200, 800);
+		viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
 	}
 
 	@Override
@@ -26,15 +32,26 @@ public class PantallaGameOver implements Screen {
 		camera.update();
 		game.getBatch().setProjectionMatrix(camera.combined);
 
+		viewport.apply();
 		game.getBatch().begin();
-		game.getFont().draw(game.getBatch(), "Game Over !!! ", 120, 400,400,1,true);
-		game.getFont().draw(game.getBatch(), "Pincha en cualquier lado para reiniciar ...", 100, 300);
+		boolean nuevoRecord = (rondaFinal >= game.getHighRonda());
+		game.getFont().draw(game.getBatch(), "Game Over !!!", 
+				0, 500, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+		
+		game.getFont().draw(game.getBatch(), "Ronda Alcanzada: " + rondaFinal,
+                0, 400, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+		
+		if (nuevoRecord) {
+            game.getFont().draw(game.getBatch(), "¡Nuevo Record!",
+                0, 350, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+        }
+		game.getFont().draw(game.getBatch(), "Haz click en cualquier lado para reintentar ...", 
+                0, 250, SpaceNavigation.WORLD_WIDTH, Align.center, true);
 	
 		game.getBatch().end();
 
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
 			Screen ss = new PantallaJuego(game,1,3,0,1,1,10);
-			ss.resize(1200, 800);
 			game.setScreen(ss);
 			dispose();
 		}
@@ -49,7 +66,7 @@ public class PantallaGameOver implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
+		viewport.update(width, height, true);
 		
 	}
 

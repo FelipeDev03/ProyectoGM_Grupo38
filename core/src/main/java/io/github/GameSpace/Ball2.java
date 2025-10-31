@@ -4,17 +4,17 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 
 
 public class Ball2 {
-	private int x;
-    private int y;
-    private int xSpeed;
-    private int ySpeed;
+	private float x;
+    private float y;
+    private float speed;
     private Sprite spr;
 
-    public Ball2(int x, int y, int size, int xSpeed, int ySpeed, Texture tx) {
+    public Ball2(int x, int y, int size, float speed, Texture tx) {
     	spr = new Sprite(tx);
     	this.x = x; 
  	
@@ -27,18 +27,25 @@ public class Ball2 {
     	if (y-size < 0) this.y = y+size;
     	if (y+size > Gdx.graphics.getHeight())this.y = y-size;
     	
-        spr.setPosition(x, y);
-        this.setXSpeed(xSpeed);
-        this.setySpeed(ySpeed);
+        spr.setPosition(this.x, this.y);
+        this.speed = speed;
     }
     public void update() {
-        x += getXSpeed();
-        y += getySpeed();
+    	// Definir el objetivo
+        float targetX = SpaceNavigation.WORLD_WIDTH / 2f;
+        float targetY = SpaceNavigation.WORLD_HEIGHT / 2f;
 
-        if (x+getXSpeed() < 0 || x+getXSpeed()+spr.getWidth() > Gdx.graphics.getWidth())
-        	setXSpeed(getXSpeed() * -1);
-        if (y+getySpeed() < 0 || y+getySpeed()+spr.getHeight() > Gdx.graphics.getHeight())
-        	setySpeed(getySpeed() * -1);
+        // Calcular el ángulo desde el zombi hacia el centro
+        float angulo = MathUtils.atan2(targetY - y, targetX - x);
+
+        // Calcular el movimiento en X e Y basado en el ángulo y la velocidad
+        float velX = MathUtils.cos(angulo) * speed;
+        float velY = MathUtils.sin(angulo) * speed;
+
+        // Aplicar el movimiento
+        x += velX;
+        y += velY;
+        
         spr.setPosition(x, y);
     }
     
@@ -50,6 +57,7 @@ public class Ball2 {
     }
     
     public void checkCollision(Ball2 b2) {
+    	/*
         if(spr.getBoundingRectangle().overlaps(b2.spr.getBoundingRectangle())){
         	// rebote
             if (getXSpeed() ==0) setXSpeed(getXSpeed() + b2.getXSpeed()/2);
@@ -60,21 +68,8 @@ public class Ball2 {
             if (getySpeed() ==0) setySpeed(getySpeed() + b2.getySpeed()/2);
             if (b2.getySpeed() ==0) b2.setySpeed(b2.getySpeed() + getySpeed()/2);
             setySpeed(- getySpeed());
-            b2.setySpeed(- b2.getySpeed()); 
+            b2.setySpeed(- b2.getySpeed());  
         }
+        */
     }
-	public int getXSpeed() {
-		return xSpeed;
-	}
-	public void setXSpeed(int xSpeed) {
-		this.xSpeed = xSpeed;
-	}
-	public int getySpeed() {
-		return ySpeed;
-	}
-	public void setySpeed(int ySpeed) {
-		this.ySpeed = ySpeed;
-	}
-	
-    
 }

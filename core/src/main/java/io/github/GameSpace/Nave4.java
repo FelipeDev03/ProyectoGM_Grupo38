@@ -8,14 +8,12 @@ import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 
-
-
 public class Nave4 {
 	
 	private boolean destruida = false;
     private int vidas = 3;
-    private float xVel = 0;
-    private float yVel = 0;
+    //private float xVel = 0;
+    //private float yVel = 0;
     private Sprite spr;
     private Sound sonidoHerido;
     private Sound soundBala;
@@ -30,62 +28,70 @@ public class Nave4 {
     	this.txBala = txBala;
     	spr = new Sprite(tx);
     	spr.setPosition(x, y);
-    	//spr.setOriginCenter();
+    	spr.setOriginCenter(); // Linea para que rote en centro
     	spr.setBounds(x, y, 45, 45);
-
     }
+    
     public void draw(SpriteBatch batch, PantallaJuego juego){
-        float x =  spr.getX();
-        float y =  spr.getY();
+
+        // Declara la variable de ángulo
+        float angleRadians; 
+        
+        // Logica apuntado
+        // Obtener coordenadas del mouse.
+        float mouseX = Gdx.input.getX();
+        
+        // Invertir el eje Y
+        float mouseY = Gdx.graphics.getHeight() - Gdx.input.getY();
+
+        // Obtener el centro del jugador
+        float playerX = spr.getX() + spr.getOriginX();
+        float playerY = spr.getY() + spr.getOriginY();
+
+        // Calcular ángulo
+        angleRadians = MathUtils.atan2(mouseY - playerY, mouseX - playerX);
+        
+        // Aplicar rotación
+        float angleDegrees = angleRadians * MathUtils.radiansToDegrees;
+        spr.setRotation(angleDegrees - 90);
+
+        // LÓGICA DE DIBUJADO (CONDICIONAL)
+        // omprueba si estás herido
         if (!herido) {
-	        // que se mueva con teclado
-	        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) xVel--;
-	        if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) xVel++;
-        	if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) yVel--;     
-	        if (Gdx.input.isKeyJustPressed(Input.Keys.UP)) yVel++;
-        	
-	     /*   if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) spr.setRotation(++rotacion);
-	        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) spr.setRotation(--rotacion);
-	        
-	        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
-	        	xVel -=Math.sin(Math.toRadians(rotacion));
-	        	yVel +=Math.cos(Math.toRadians(rotacion));
-	        	System.out.println(rotacion+" - "+Math.sin(Math.toRadians(rotacion))+" - "+Math.cos(Math.toRadians(rotacion))) ;    
-	        }
-	        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)){
-	        	xVel +=Math.sin(Math.toRadians(rotacion));
-	        	yVel -=Math.cos(Math.toRadians(rotacion));
-	        	     
-	        }*/
-	        
-	        // que se mantenga dentro de los bordes de la ventana
-	        if (x+xVel < 0 || x+xVel+spr.getWidth() > Gdx.graphics.getWidth())
-	        	xVel*=-1;
-	        if (y+yVel < 0 || y+yVel+spr.getHeight() > Gdx.graphics.getHeight())
-	        	yVel*=-1;
-	        
-	        spr.setPosition(x+xVel, y+yVel);   
-         
- 		    spr.draw(batch);
+            spr.draw(batch);
         } else {
+           // Lógica de cuando está herido
            spr.setX(spr.getX()+MathUtils.random(-2,2));
- 		   spr.draw(batch); 
- 		  spr.setX(x);
- 		   tiempoHerido--;
- 		   if (tiempoHerido<=0) herido = false;
- 		 }
-        // disparo
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {         
-          Bullet  bala = new Bullet(spr.getX()+spr.getWidth()/2-5,spr.getY()+ spr.getHeight()-5,0,3,txBala);
-	      juego.agregarBala(bala);
-	      soundBala.play();
+           spr.draw(batch); 
+           spr.setX(spr.getX()); // Devuélvelo a su X original
+           tiempoHerido--;
+           if (tiempoHerido<=0) herido = false;
+         }
+        
+        // LÓGICA DE DISPARO CON MOUSE
+        
+        // Comprueba si se presionó el botón izq. del mouse
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {   
+            
+            float velBala = 5.0f;
+            
+            float velX = MathUtils.cos(angleRadians) * velBala;
+            float velY = MathUtils.sin(angleRadians) * velBala;
+
+            // La bala se crea en el centro del jugador
+            float startX = spr.getX() + spr.getOriginX();
+            float startY = spr.getY() + spr.getOriginY();
+
+            Bullet bala = new Bullet(startX, startY, velX, velY, txBala);
+            juego.agregarBala(bala);
+            soundBala.play();
         }
-       
     }
       
     public boolean checkCollision(Ball2 b) {
         if(!herido && b.getArea().overlaps(spr.getBoundingRectangle())){
         	// rebote
+        	/*
             if (xVel ==0) xVel += b.getXSpeed()/2;
             if (b.getXSpeed() ==0) b.setXSpeed(b.getXSpeed() + (int)xVel/2);
             xVel = - xVel;

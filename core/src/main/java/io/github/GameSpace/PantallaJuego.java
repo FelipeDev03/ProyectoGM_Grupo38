@@ -7,16 +7,21 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.ScreenUtils;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
+import com.badlogic.gdx.utils.Align;
 
 
 public class PantallaJuego implements Screen {
 
 	private SpaceNavigation game;
 	private OrthographicCamera camera;	
+	private Viewport viewport;
 	private SpriteBatch batch;
 	private Sound explosionSound;
 	private Music gameMusic;
@@ -30,7 +35,13 @@ public class PantallaJuego implements Screen {
 	private  ArrayList<Ball2> balls1 = new ArrayList<>();
 	private  ArrayList<Ball2> balls2 = new ArrayList<>();
 	private  ArrayList<Bullet> balas = new ArrayList<>();
-
+	
+	// Variables del Controlador de Oleadas
+	private int zombisPorOleada;        
+	private int zombisGenerados;        
+	private float tiempoEntreSpawns = 1.0f; 
+	private float spawnTimer;           
+	private Random r;                   
 
 	public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
 			int velXAsteroides, int velYAsteroides, int cantAsteroides) {
@@ -43,7 +54,8 @@ public class PantallaJuego implements Screen {
 		
 		batch = game.getBatch();
 		camera = new OrthographicCamera();	
-		camera.setToOrtho(false, 800, 640);
+		viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
+		// camera.setToOrtho(false, 800, 640);
 		//inicializar assets; musica de fondo y efectos de sonido
 		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
 		explosionSound.setVolume(1,0.5f);
@@ -54,35 +66,98 @@ public class PantallaJuego implements Screen {
 		gameMusic.play();
 		
 	    // cargar imagen de la nave, 64x64   
-	    nave = new Nave4(Gdx.graphics.getWidth()/2-50,30,new Texture(Gdx.files.internal("MainShip3.png")),
-	    				Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
-	    				new Texture(Gdx.files.internal("Rocket2.png")), 
-	    				Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
-        nave.setVidas(vidas);
+		nave = new Nave4(SpaceNavigation.WORLD_WIDTH / 2 - 22, // 400 - 22
+                SpaceNavigation.WORLD_HEIGHT / 2 - 22, // 320 - 22
+                new Texture(Gdx.files.internal("MainShip3.png")),
+				 Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
+				 new Texture(Gdx.files.internal("Rocket2.png")), 
+				 Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
+		nave.setVidas(vidas);
+
+		//float velocidadBaseZombi = velXAsteroides;
+		
+		this.r = new Random(); // Inicializa el generador aleatorio
+        this.zombisPorOleada = cantAsteroides; // cantAsteroides es 10
+        this.zombisGenerados = 0;
+        this.spawnTimer = 0; // Inicia el temporizador
+        /*
         //crear asteroides
         Random r = new Random();
 	    for (int i = 0; i < cantAsteroides; i++) {
-	        Ball2 bb = new Ball2(r.nextInt((int)Gdx.graphics.getWidth()),
-	  	            50+r.nextInt((int)Gdx.graphics.getHeight()-50),
-	  	            20+r.nextInt(10), velXAsteroides+r.nextInt(4), velYAsteroides+r.nextInt(4), 
-	  	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
+	    	Ball2 bb = new Ball2(r.nextInt(SpaceNavigation.WORLD_WIDTH),
+  	            50+r.nextInt(SpaceNavigation.WORLD_HEIGHT - 50),
+  	            20+r.nextInt(10), velocidadBaseZombi,
+  	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
 	  	    balls1.add(bb);
 	  	    balls2.add(bb);
 	  	}
+	  	*/
 	}
     
-	public void dibujaEncabezado() {
-		CharSequence str = "Vidas: "+nave.getVidas()+" Ronda: "+ronda;
-		game.getFont().getData().setScale(2f);		
-		game.getFont().draw(batch, str, 10, 30);
-		game.getFont().draw(batch, "Score:"+this.score, Gdx.graphics.getWidth()-150, 30);
-		game.getFont().draw(batch, "HighScore:"+game.getHighScore(), Gdx.graphics.getWidth()/2-100, 30);
+	private void generarUnZombi() {
+	    // Elegir un ángulo aleatorio
+	    float angulo = r.nextFloat() * 360f;
+	    
+	    // Definir un radio fuera de la pantalla
+	    float radioSpawn = 500f; 
+	    
+	    // Calcular la posición X e Y en ese círculo, relativo al centro de la pantalla
+	    float spawnX = SpaceNavigation.WORLD_WIDTH / 2f + MathUtils.cosDeg(angulo) * radioSpawn;
+	    float spawnY = SpaceNavigation.WORLD_HEIGHT / 2f + MathUtils.sinDeg(angulo) * radioSpawn;
+	    
+	    // Obtener la velocidad base
+	    float velocidadBaseZombi = velXAsteroides;
+	    
+	    // Crear el zombi
+	    Ball2 bb = new Ball2((int)spawnX, (int)spawnY, 20, // tamaño 20 (puedes randomizarlo)
+	            velocidadBaseZombi, 
+	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
+	    
+	    balls1.add(bb);
+	    balls2.add(bb);
 	}
+
+	public void dibujaEncabezado() {
+		game.getFont().getData().setScale(2f);		
+
+		// Vidas y ronda
+		game.getFont().draw(batch, "Vidas: "+nave.getVidas(), 10, 70); // Y=70 (Más arriba)
+		game.getFont().draw(batch, "Ronda: "+ronda, 10, 30);            // Y=30 (Abajo)
+		
+		// Puntos y record
+		game.getFont().draw(batch, "Puntos:"+this.score, SpaceNavigation.WORLD_WIDTH-150, 30);
+		game.getFont().draw(batch, "Ronda Record: "+game.getHighRonda(), SpaceNavigation.WORLD_WIDTH/2-100, 30);
+		
+		// Zombis Restantes
+		int zombisRestantes = (zombisPorOleada - zombisGenerados) + balls1.size();
+		game.getFont().draw(batch, "Zombis Restantes: "+zombisRestantes, 
+			0, // X=0
+			SpaceNavigation.WORLD_HEIGHT - 20,
+			SpaceNavigation.WORLD_WIDTH,
+			Align.center,
+			false);
+	}
+	
 	@Override
 	public void render(float delta) {
-		  Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		  ScreenUtils.clear(0, 0, 0.2f, 1);
+		  // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		  
+		  camera.update();
+		  viewport.apply();
+		  batch.setProjectionMatrix(camera.combined);
+		  
           batch.begin();
 		  dibujaEncabezado();
+		  if (zombisGenerados < zombisPorOleada) {
+              spawnTimer += delta; // Suma el tiempo del frame al temporizador
+              
+              if (spawnTimer >= tiempoEntreSpawns) {
+                  generarUnZombi();
+                  zombisGenerados++;
+                  spawnTimer = 0f; // Reinicia el temporizador
+              }
+          }
 	      if (!nave.estaHerido()) {
 		      // colisiones entre balas y asteroides y su destruccion  
 	    	  for (int i = 0; i < balas.size(); i++) {
@@ -139,19 +214,19 @@ public class PantallaJuego implements Screen {
   	        }
 	      
 	      if (nave.estaDestruido()) {
-  			if (score > game.getHighScore())
-  				game.setHighScore(score);
-	    	Screen ss = new PantallaGameOver(game);
-  			ss.resize(1200, 800);
+  			if (ronda > game.getHighRonda())
+  				game.setHighRonda(ronda);
+	    	Screen ss = new PantallaGameOver(game, ronda);
+  			//ss.resize(1200, 800);
   			game.setScreen(ss);
   			dispose();
   		  }
 	      batch.end();
-	      //nivel completado
-	      if (balls1.size()==0) {
+	      // nivel completado
+	      if (zombisGenerados == zombisPorOleada && balls1.size() == 0) {
 			Screen ss = new PantallaJuego(game,ronda+1, nave.getVidas(), score, 
-					velXAsteroides+3, velYAsteroides+3, cantAsteroides+10);
-			ss.resize(1200, 800);
+					velXAsteroides, velYAsteroides, cantAsteroides+10);
+			// ss.resize(1200, 800);
 			game.setScreen(ss);
 			dispose();
 		  }
@@ -170,8 +245,7 @@ public class PantallaJuego implements Screen {
 
 	@Override
 	public void resize(int width, int height) {
-		// TODO Auto-generated method stub
-		
+		viewport.update(width, height, true); // true = centrar la cámara
 	}
 
 	@Override
