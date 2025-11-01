@@ -4,6 +4,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle; 
 
 
 public class Bullet {
@@ -12,13 +13,18 @@ public class Bullet {
 	private float ySpeed;
 	private boolean destroyed = false;
 	private Sprite spr;
-	    
+
 	    public Bullet(float x, float y, float xSpeed, float ySpeed, Texture tx) {
 	    	spr = new Sprite(tx);
 	    	spr.setPosition(x, y);
+	    	
+	    	// ajusta tamaño bala
+	    	spr.setSize(10, 10);
+	    	
 	        this.xSpeed = xSpeed;
 	        this.ySpeed = ySpeed;
 	    }
+	    
 	    public void update() {
 	        spr.setPosition(spr.getX()+xSpeed, spr.getY()+ySpeed);
 	        if (spr.getX() < 0 || spr.getX()+spr.getWidth() > Gdx.graphics.getWidth()) {
@@ -34,9 +40,8 @@ public class Bullet {
 	    	spr.draw(batch);
 	    }
 	    
-	    public boolean checkCollision(Ball2 b2) {
-	        if(spr.getBoundingRectangle().overlaps(b2.getArea())){
-	        	// Se destruyen ambos
+	    public boolean checkCollision(Rectangle area) {
+	        if(spr.getBoundingRectangle().overlaps(area)){
 	            this.destroyed = true;
 	            return true;
 	

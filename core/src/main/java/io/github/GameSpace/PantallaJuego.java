@@ -28,15 +28,15 @@ public class PantallaJuego implements Screen {
 	private int score;
 	private int ronda;
 	private int velXAsteroides; 
-	private int velYAsteroides; 
 	private int cantAsteroides;
 	
 	private Nave4 nave;
-	private  ArrayList<Ball2> balls1 = new ArrayList<>();
-	private  ArrayList<Ball2> balls2 = new ArrayList<>();
+	
+	private  ArrayList<Zombie> zombies = new ArrayList<>(); 
 	private  ArrayList<Bullet> balas = new ArrayList<>();
 	
-	// Variables del Controlador de Oleadas
+	private Texture backgroundTexture;
+	
 	private int zombisPorOleada;        
 	private int zombisGenerados;        
 	private float tiempoEntreSpawns = 1.0f; 
@@ -49,89 +49,92 @@ public class PantallaJuego implements Screen {
 		this.ronda = ronda;
 		this.score = score;
 		this.velXAsteroides = velXAsteroides;
-		this.velYAsteroides = velYAsteroides;
 		this.cantAsteroides = cantAsteroides;
 		
 		batch = game.getBatch();
 		camera = new OrthographicCamera();	
 		viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
-		// camera.setToOrtho(false, 800, 640);
-		//inicializar assets; musica de fondo y efectos de sonido
-		explosionSound = Gdx.audio.newSound(Gdx.files.internal("explosion.ogg"));
+		
+		// --- Cargar Assets (GM1.2) ---
+		// (Asegúrate de tener estos archivos en tu carpeta 'assets')
+		backgroundTexture = new Texture(Gdx.files.internal("fondo_zombie.png"));
+		
+		explosionSound = Gdx.audio.newSound(Gdx.files.internal("zombie_muerte.wav"));
 		explosionSound.setVolume(1,0.5f);
-		gameMusic = Gdx.audio.newMusic(Gdx.files.internal("piano-loops.wav")); //
+		gameMusic = Gdx.audio.newMusic(Gdx.files.internal("musica_fondo.mp3")); 
 		
 		gameMusic.setLooping(true);
 		gameMusic.setVolume(0.5f);
 		gameMusic.play();
 		
-	    // cargar imagen de la nave, 64x64   
-		nave = new Nave4(SpaceNavigation.WORLD_WIDTH / 2 - 22, // 400 - 22
-                SpaceNavigation.WORLD_HEIGHT / 2 - 22, // 320 - 22
-                new Texture(Gdx.files.internal("MainShip3.png")),
-				 Gdx.audio.newSound(Gdx.files.internal("hurt.ogg")), 
-				 new Texture(Gdx.files.internal("Rocket2.png")), 
-				 Gdx.audio.newSound(Gdx.files.internal("pop-sound.mp3"))); 
-		nave.setVidas(vidas);
-
-		//float velocidadBaseZombi = velXAsteroides;
+	    
+		nave = new Nave4(SpaceNavigation.WORLD_WIDTH / 2 - 22, 
+                SpaceNavigation.WORLD_HEIGHT / 2 - 22, 
+                new Texture(Gdx.files.internal("survivor.png")), 
+				 Gdx.audio.newSound(Gdx.files.internal("jugador_herido.wav")), 
+				 new Texture(Gdx.files.internal("bala.png")), 
+				 Gdx.audio.newSound(Gdx.files.internal("disparo.wav"))); 
 		
-		this.r = new Random(); // Inicializa el generador aleatorio
-        this.zombisPorOleada = cantAsteroides; // cantAsteroides es 10
+		nave.setVidas(vidas);
+		
+		this.r = new Random(); 
+        this.zombisPorOleada = cantAsteroides; 
         this.zombisGenerados = 0;
-        this.spawnTimer = 0; // Inicia el temporizador
-        /*
-        //crear asteroides
-        Random r = new Random();
-	    for (int i = 0; i < cantAsteroides; i++) {
-	    	Ball2 bb = new Ball2(r.nextInt(SpaceNavigation.WORLD_WIDTH),
-  	            50+r.nextInt(SpaceNavigation.WORLD_HEIGHT - 50),
-  	            20+r.nextInt(10), velocidadBaseZombi,
-  	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
-	  	    balls1.add(bb);
-	  	    balls2.add(bb);
-	  	}
-	  	*/
+        this.spawnTimer = 0; 
 	}
     
 	private void generarUnZombi() {
-	    // Elegir un ángulo aleatorio
 	    float angulo = r.nextFloat() * 360f;
-	    
-	    // Definir un radio fuera de la pantalla
 	    float radioSpawn = 500f; 
 	    
-	    // Calcular la posición X e Y en ese círculo, relativo al centro de la pantalla
 	    float spawnX = SpaceNavigation.WORLD_WIDTH / 2f + MathUtils.cosDeg(angulo) * radioSpawn;
 	    float spawnY = SpaceNavigation.WORLD_HEIGHT / 2f + MathUtils.sinDeg(angulo) * radioSpawn;
 	    
-	    // Obtener la velocidad base
 	    float velocidadBaseZombi = velXAsteroides;
-	    
-	    // Crear el zombi
-	    Ball2 bb = new Ball2((int)spawnX, (int)spawnY, 20, // tamaño 20 (puedes randomizarlo)
-	            velocidadBaseZombi, 
-	            new Texture(Gdx.files.internal("aGreyMedium4.png")));	   
-	    
-	    balls1.add(bb);
-	    balls2.add(bb);
+		
+        float velocidadMejorada = velocidadBaseZombi;
+        int saludMejorada = 1 + ronda; 
+        
+        Texture zombieTexture = new Texture(Gdx.files.internal("zombi.png"));
+
+        // Spawn Tanque
+        // 15% de chance, a partir de la ronda 5)
+        if (ronda >= 5 && r.nextFloat() < 0.15f) {
+            ZombieTanque zt = new ZombieTanque((int)spawnX, (int)spawnY, velocidadMejorada, zombieTexture);
+            // Los tanques tienen el triple de vida que uno normal
+            zt.health = saludMejorada * 3; 
+            zombies.add(zt);
+        } 
+        
+        // Spawn rapidos
+        // 0% de chance, a partir de la ronda 3)
+        else if (ronda >= 3 && r.nextFloat() < 0.20f) { // <-- ¡CORREGIDO!
+            ZombieRapido zr = new ZombieRapido((int)spawnX, (int)spawnY, velocidadMejorada, zombieTexture);
+            zr.health = (int)(saludMejorada * 0.5f);
+            zombies.add(zr);
+        } 
+        
+        // Spawn normal
+        else {
+            ZombieNormal zn = new ZombieNormal((int)spawnX, (int)spawnY, velocidadMejorada, zombieTexture);
+            zn.health = saludMejorada;
+            zombies.add(zn);
+        }
 	}
 
 	public void dibujaEncabezado() {
 		game.getFont().getData().setScale(2f);		
 
-		// Vidas y ronda
-		game.getFont().draw(batch, "Vidas: "+nave.getVidas(), 10, 70); // Y=70 (Más arriba)
-		game.getFont().draw(batch, "Ronda: "+ronda, 10, 30);            // Y=30 (Abajo)
+		game.getFont().draw(batch, "Vidas: "+nave.getVidas(), 10, 70); 
+		game.getFont().draw(batch, "Ronda: "+ronda, 10, 30);            
 		
-		// Puntos y record
 		game.getFont().draw(batch, "Puntos:"+this.score, SpaceNavigation.WORLD_WIDTH-150, 30);
 		game.getFont().draw(batch, "Ronda Record: "+game.getHighRonda(), SpaceNavigation.WORLD_WIDTH/2-100, 30);
 		
-		// Zombis Restantes
-		int zombisRestantes = (zombisPorOleada - zombisGenerados) + balls1.size();
+		int zombisRestantes = (zombisPorOleada - zombisGenerados) + zombies.size();
+		
 		game.getFont().draw(batch, "Zombis Restantes: "+zombisRestantes, 
-			0, // X=0
+			0, 
 			SpaceNavigation.WORLD_HEIGHT - 20,
 			SpaceNavigation.WORLD_WIDTH,
 			Align.center,
@@ -140,93 +143,106 @@ public class PantallaJuego implements Screen {
 	
 	@Override
 	public void render(float delta) {
-		  ScreenUtils.clear(0, 0, 0.2f, 1);
-		  // Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+		  ScreenUtils.clear(0, 0, 0, 1); 
 		  
 		  camera.update();
 		  viewport.apply();
-		  batch.setProjectionMatrix(camera.combined);
 		  
-          batch.begin();
-		  dibujaEncabezado();
+		  //LÓGICA 
+		  
+		  // Generar zombis
 		  if (zombisGenerados < zombisPorOleada) {
-              spawnTimer += delta; // Suma el tiempo del frame al temporizador
-              
+              spawnTimer += delta; 
               if (spawnTimer >= tiempoEntreSpawns) {
                   generarUnZombi();
                   zombisGenerados++;
-                  spawnTimer = 0f; // Reinicia el temporizador
+                  spawnTimer = 0f; 
               }
           }
+		  
 	      if (!nave.estaHerido()) {
-		      // colisiones entre balas y asteroides y su destruccion  
+		      
+			  // Lógica de Balas
 	    	  for (int i = 0; i < balas.size(); i++) {
 		            Bullet b = balas.get(i);
 		            b.update();
-		            for (int j = 0; j < balls1.size(); j++) {    
-		              if (b.checkCollision(balls1.get(j))) {          
-		            	 explosionSound.play();
-		            	 balls1.remove(j);
-		            	 balls2.remove(j);
-		            	 j--;
-		            	 score +=10;
+					boolean balaRemovida = false;
+		            for (int j = 0; j < zombies.size(); j++) {    
+					  Zombie z = zombies.get(j);
+		              if (b.checkCollision(z.getArea())) { 
+		            	 z.hit(1);
+                         if (!z.isActive()) { 
+                            explosionSound.play();
+                            z.onDeath(); 
+                            zombies.remove(j);
+                            j--;
+                            score +=10;
+                         }
+                         balas.remove(i);
+                         i--;
+						 balaRemovida = true; 
+                         break; 
 		              }   	  
 		  	        }
-		                
-		         //   b.draw(batch);
+		            if (balaRemovida) continue; 
 		            if (b.isDestroyed()) {
 		                balas.remove(b);
-		                i--; //para no saltarse 1 tras eliminar del arraylist
+		                i--; 
 		            }
 		      }
-		      //actualizar movimiento de asteroides dentro del area
-		      for (Ball2 ball : balls1) {
-		          ball.update();
+		      // Lógica de Zombis
+		      for (Zombie z : zombies) {
+		          z.update();
 		      }
-		      //colisiones entre asteroides y sus rebotes  
-		      for (int i=0;i<balls1.size();i++) {
-		    	Ball2 ball1 = balls1.get(i);   
-		        for (int j=0;j<balls2.size();j++) {
-		          Ball2 ball2 = balls2.get(j); 
-		          if (i<j) {
-		        	  ball1.checkCollision(ball2);
-		     
-		          }
-		        }
-		      } 
 	      }
-	      //dibujar balas
+		  
+	      // Lógica de Colisión Nave vs Zombi
+	      for (int i = 0; i < zombies.size(); i++) {
+	    	    Zombie z = zombies.get(i);
+	            if (nave.checkCollision(z.getArea())) { 
+	            	 zombies.remove(i);
+	            	 i--;
+                }   	  
+  	      }
+		  
+		  // --- DIBUJADO
+          batch.setProjectionMatrix(camera.combined);
+          batch.begin();
+		  
+		  // 1. FONDO
+		  batch.draw(backgroundTexture, 0, 0, SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT);
+		  
+		  // 2. ZOMBIS
+	      for (Zombie z : zombies) {
+	    	    z.draw(batch);
+  	      }
+		  
+		  // 3. BALAS
 	     for (Bullet b : balas) {       
 	          b.draw(batch);
 	      }
+		  
+		  // 4. SOBREVIVIENTE
 	      nave.draw(batch, this);
-	      //dibujar asteroides y manejar colision con nave
-	      for (int i = 0; i < balls1.size(); i++) {
-	    	    Ball2 b=balls1.get(i);
-	    	    b.draw(batch);
-		          //perdió vida o game over
-	              if (nave.checkCollision(b)) {
-		            //asteroide se destruye con el choque             
-	            	 balls1.remove(i);
-	            	 balls2.remove(i);
-	            	 i--;
-              }   	  
-  	        }
-	      
+		  
+		  // 5. TEXTO (UI)
+		  dibujaEncabezado();
+		  
+	      batch.end();
+		  
+		  
+		  
+		  // --- 3. LÓGICA DE FIN DE JUEGO / RONDA ---
 	      if (nave.estaDestruido()) {
   			if (ronda > game.getHighRonda())
   				game.setHighRonda(ronda);
 	    	Screen ss = new PantallaGameOver(game, ronda);
-  			//ss.resize(1200, 800);
   			game.setScreen(ss);
   			dispose();
   		  }
-	      batch.end();
-	      // nivel completado
-	      if (zombisGenerados == zombisPorOleada && balls1.size() == 0) {
-			Screen ss = new PantallaJuego(game,ronda+1, nave.getVidas(), score, 
-					velXAsteroides, velYAsteroides, cantAsteroides+10);
-			// ss.resize(1200, 800);
+		  
+	      if (zombisGenerados == zombisPorOleada && zombies.size() == 0) {
+            Screen ss = new PantallaTienda(game, ronda, nave, score, velXAsteroides, cantAsteroides);
 			game.setScreen(ss);
 			dispose();
 		  }
@@ -239,38 +255,31 @@ public class PantallaJuego implements Screen {
 	
 	@Override
 	public void show() {
-		// TODO Auto-generated method stub
 		gameMusic.play();
 	}
 
 	@Override
 	public void resize(int width, int height) {
-		viewport.update(width, height, true); // true = centrar la cámara
+		viewport.update(width, height, true); 
 	}
 
 	@Override
 	public void pause() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void resume() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void hide() {
-		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void dispose() {
-		// TODO Auto-generated method stub
 		this.explosionSound.dispose();
 		this.gameMusic.dispose();
+		this.backgroundTexture.dispose();
 	}
    
 }
