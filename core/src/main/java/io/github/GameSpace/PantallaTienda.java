@@ -18,6 +18,10 @@ public class PantallaTienda implements Screen {
     private SpaceNavigation game;
     private OrthographicCamera camera;
     private Viewport viewport;
+    private MejoraDano mejoraDano;
+    private MejoraVida mejoraVida;
+    private String mensajeFeedback = "";
+    private float tiempoMensaje = 0;
     
     // Datos del juego
     private Nave4 nave;
@@ -36,7 +40,7 @@ public class PantallaTienda implements Screen {
     private Rectangle botonContinuar;
 
 
-    public PantallaTienda(SpaceNavigation game, int rondaActual, Nave4 nave, int score, int velXActual, int cantZombisActual) {
+    public PantallaTienda(SpaceNavigation game, int rondaActual, Nave4 nave, int score, int velXActual, int cantZombisActual, int costoDano, int costoVida) {
         this.game = game;
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
@@ -48,16 +52,20 @@ public class PantallaTienda implements Screen {
         this.velXActual = velXActual;
         this.cantZombisActual = cantZombisActual;
 
-        // Inicializar la lista de todas las mejoras posibles
+        // En caso de agregar mejoras en posteriores updates
         todasLasMejoras = new ArrayList<>();
-        todasLasMejoras.add(new MejoraVida());
-        todasLasMejoras.add(new MejoraDano());
+        mejoraVida = new MejoraVida();
+        mejoraVida.setCosto(costoVida);
+        todasLasMejoras.add(mejoraVida);
+        mejoraDano = new MejoraDano();
+        mejoraDano.setCosto(costoDano);
+        todasLasMejoras.add(mejoraDano);
         
         // Seleccionar 2 aleatorias para mostrar
         Collections.shuffle(todasLasMejoras);
         mejorasEnTienda = new ArrayList<>();
         mejorasEnTienda.add(todasLasMejoras.get(0));
-        // Asegúrate de tener al menos 2 mejoras en "todasLasMejoras" para evitar errores
+        
         if (todasLasMejoras.size() > 1) {
             mejorasEnTienda.add(todasLasMejoras.get(1));
         }
@@ -82,6 +90,13 @@ public class PantallaTienda implements Screen {
             0, 550, SpaceNavigation.WORLD_WIDTH, Align.center, false);
         game.getFont().draw(game.getBatch(), "Puntos: " + score, 
             0, 500, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+        if (tiempoMensaje > 0) {
+            layout.setText(game.getFont(), mensajeFeedback, com.badlogic.gdx.graphics.Color.YELLOW, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+            
+            game.getFont().draw(game.getBatch(), layout, 0, 450);
+            
+            tiempoMensaje -= delta;
+        }
 
         // --- Dibujar Mejoras
         
@@ -129,6 +144,14 @@ public class PantallaTienda implements Screen {
         if (score >= mejora.getCosto()) {
             score -= mejora.getCosto();
             mejora.aplicarMejora(nave, null); // Pasamos null porque estas mejoras no afectan a PantallaJuego
+            
+            // Si se compro
+            mensajeFeedback = "¡Comprado: " + mejora.getNombre() + "!";
+            tiempoMensaje = 2.0f; // El mensaje dura 2 segundos
+        } else {
+            // Si no alcanza
+            mensajeFeedback = "¡Puntos insuficientes! Necesitas " + mejora.getCosto();
+            tiempoMensaje = 1.5f; // El mensaje dura 1.5 segundos
         }
     }
     
@@ -139,7 +162,8 @@ public class PantallaTienda implements Screen {
         int nuevosZombis = cantZombisActual + 5;   // Aumenta la cantidad
         
         Screen ss = new PantallaJuego(game, proximaRonda, nave.getVidas(), score, 
-                        nuevaVelocidad, nuevaVelocidad, nuevosZombis);
+                        nuevaVelocidad, nuevaVelocidad, nuevosZombis, nave.getDanoDisparo(), 
+                        mejoraDano.getCosto(), mejoraVida.getCosto());
         game.setScreen(ss);
         dispose();
     }

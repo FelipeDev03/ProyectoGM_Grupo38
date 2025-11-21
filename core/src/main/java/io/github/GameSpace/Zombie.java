@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 
-// GM1.4: Clase abstracta padre
+// Clase abstracta padre
 public abstract class Zombie {
     protected float x;
     protected float y;

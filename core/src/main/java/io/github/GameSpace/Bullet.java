@@ -13,8 +13,9 @@ public class Bullet {
 	private float ySpeed;
 	private boolean destroyed = false;
 	private Sprite spr;
+	private int damage;
 
-	    public Bullet(float x, float y, float xSpeed, float ySpeed, Texture tx) {
+	    public Bullet(float x, float y, float xSpeed, float ySpeed, Texture tx, int damage) {
 	    	spr = new Sprite(tx);
 	    	spr.setPosition(x, y);
 	    	
@@ -23,6 +24,7 @@ public class Bullet {
 	    	
 	        this.xSpeed = xSpeed;
 	        this.ySpeed = ySpeed;
+	        this.damage = damage;
 	    }
 	    
 	    public void update() {
@@ -50,5 +52,8 @@ public class Bullet {
 	    }
 	    
 	    public boolean isDestroyed() {return destroyed;}
-	
+	    
+	    public int getDamage() {
+	        return damage;
+	    }
 }

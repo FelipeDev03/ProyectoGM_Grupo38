@@ -4,18 +4,22 @@ import com.badlogic.gdx.Gdx;
 
 public class MejoraDano implements Comprable {
     
-    private int costo = 100;
+    private int costo = 250;
 
     @Override
     public String getNombre() {
-        return "Balas Mejoradas";
+        return "Mejora de balas";
     }
 
     @Override
     public String getDescripcion() {
-        return "Aumenta el daño de las balas.";
+        return "Aumenta el daño de las balas en +1.";
     }
 
+    public void setCosto(int nuevoCosto) {
+        this.costo = nuevoCosto;
+    }
+    
     @Override
     public int getCosto() {
         return costo;
@@ -23,8 +27,9 @@ public class MejoraDano implements Comprable {
 
     @Override
     public void aplicarMejora(Nave4 nave, PantallaJuego juego) {
-        Gdx.app.log("Tienda", "Dano aumentado!");
-        costo += 50; 
+    	nave.aumentarDano(1);
+    	Gdx.app.log("Tienda", "Daño aumentado a: " + nave.getDanoDisparo());
+        costo += 200; 
     }
 
     @Override

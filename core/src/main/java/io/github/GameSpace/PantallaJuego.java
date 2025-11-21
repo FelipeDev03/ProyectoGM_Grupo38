@@ -29,6 +29,8 @@ public class PantallaJuego implements Screen {
 	private int ronda;
 	private int velXAsteroides; 
 	private int cantAsteroides;
+	private int costoDano;
+	private int costoVida;
 	
 	private Nave4 nave;
 	
@@ -43,20 +45,21 @@ public class PantallaJuego implements Screen {
 	private float spawnTimer;           
 	private Random r;                   
 
-	public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score,  
-			int velXAsteroides, int velYAsteroides, int cantAsteroides) {
+	public PantallaJuego(SpaceNavigation game, int ronda, int vidas, int score, int velXAsteroides, 
+			int velYAsteroides, int cantAsteroides, int dano, int costoDano, int costoVida) {
 		this.game = game;
 		this.ronda = ronda;
 		this.score = score;
 		this.velXAsteroides = velXAsteroides;
 		this.cantAsteroides = cantAsteroides;
+		this.costoDano = costoDano;
+		this.costoVida = costoVida;
 		
 		batch = game.getBatch();
 		camera = new OrthographicCamera();	
 		viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
 		
-		// --- Cargar Assets (GM1.2) ---
-		// (Asegúrate de tener estos archivos en tu carpeta 'assets')
+		// Assets
 		backgroundTexture = new Texture(Gdx.files.internal("fondo_zombie.png"));
 		
 		explosionSound = Gdx.audio.newSound(Gdx.files.internal("zombie_muerte.wav"));
@@ -76,6 +79,7 @@ public class PantallaJuego implements Screen {
 				 Gdx.audio.newSound(Gdx.files.internal("disparo.wav"))); 
 		
 		nave.setVidas(vidas);
+		nave.setDano(dano);
 		
 		this.r = new Random(); 
         this.zombisPorOleada = cantAsteroides; 
@@ -93,7 +97,7 @@ public class PantallaJuego implements Screen {
 	    float velocidadBaseZombi = velXAsteroides;
 		
         float velocidadMejorada = velocidadBaseZombi;
-        int saludMejorada = 1 + ronda; 
+        int saludMejorada = 2 + ronda; 
         
         Texture zombieTexture = new Texture(Gdx.files.internal("zombi.png"));
 
@@ -123,22 +127,32 @@ public class PantallaJuego implements Screen {
 	}
 
 	public void dibujaEncabezado() {
-		game.getFont().getData().setScale(2f);		
+	    game.getFont().getData().setScale(2f);
 
-		game.getFont().draw(batch, "Vidas: "+nave.getVidas(), 10, 70); 
-		game.getFont().draw(batch, "Ronda: "+ronda, 10, 30);            
-		
-		game.getFont().draw(batch, "Puntos:"+this.score, SpaceNavigation.WORLD_WIDTH-150, 30);
-		game.getFont().draw(batch, "Ronda Record: "+game.getHighRonda(), SpaceNavigation.WORLD_WIDTH/2-100, 30);
-		
-		int zombisRestantes = (zombisPorOleada - zombisGenerados) + zombies.size();
-		
-		game.getFont().draw(batch, "Zombis Restantes: "+zombisRestantes, 
-			0, 
-			SpaceNavigation.WORLD_HEIGHT - 20,
-			SpaceNavigation.WORLD_WIDTH,
-			Align.center,
-			false);
+	    int zombisRestantes = (zombisPorOleada - zombisGenerados) + zombies.size();
+
+	    // ZONA SUPERIOR CENTRO
+	    game.getFont().draw(batch, "Ronda: " + ronda, 
+	        0, 
+	        SpaceNavigation.WORLD_HEIGHT - 10, 
+	        SpaceNavigation.WORLD_WIDTH, 
+	        Align.center, 
+	        false);
+
+	    game.getFont().draw(batch, "Zombis Restantes: " + zombisRestantes, 
+	        0, 
+	        SpaceNavigation.WORLD_HEIGHT - 50, 
+	        SpaceNavigation.WORLD_WIDTH, 
+	        Align.center, 
+	        false);
+
+	    // ZONA INFERIOR IZQUIERDA	    
+	    game.getFont().draw(batch, "Vidas: " + nave.getVidas(), 10, 70); 
+	    game.getFont().draw(batch, "Daño actual: "  + nave.getDanoDisparo(), 10, 30); 
+
+	    // ZONA INFERIOR MEDIA Y DERECHA
+	    game.getFont().draw(batch, "Puntos:" + this.score, SpaceNavigation.WORLD_WIDTH - 150, 30);
+	    game.getFont().draw(batch, "Ronda record: " + game.getHighRonda(), SpaceNavigation.WORLD_WIDTH / 2 - 100, 30);
 	}
 	
 	@Override
@@ -170,7 +184,7 @@ public class PantallaJuego implements Screen {
 		            for (int j = 0; j < zombies.size(); j++) {    
 					  Zombie z = zombies.get(j);
 		              if (b.checkCollision(z.getArea())) { 
-		            	 z.hit(1);
+		            	  z.hit(b.getDamage());
                          if (!z.isActive()) { 
                             explosionSound.play();
                             z.onDeath(); 
@@ -205,34 +219,29 @@ public class PantallaJuego implements Screen {
                 }   	  
   	      }
 		  
-		  // --- DIBUJADO
+		  // DIBUJADO
           batch.setProjectionMatrix(camera.combined);
           batch.begin();
 		  
-		  // 1. FONDO
 		  batch.draw(backgroundTexture, 0, 0, SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT);
 		  
-		  // 2. ZOMBIS
 	      for (Zombie z : zombies) {
 	    	    z.draw(batch);
   	      }
 		  
-		  // 3. BALAS
 	     for (Bullet b : balas) {       
 	          b.draw(batch);
 	      }
-		  
-		  // 4. SOBREVIVIENTE
+
 	      nave.draw(batch, this);
 		  
-		  // 5. TEXTO (UI)
 		  dibujaEncabezado();
 		  
 	      batch.end();
 		  
 		  
 		  
-		  // --- 3. LÓGICA DE FIN DE JUEGO / RONDA ---
+		  // LÓGICA DE FIN DE JUEGO / RONDA
 	      if (nave.estaDestruido()) {
   			if (ronda > game.getHighRonda())
   				game.setHighRonda(ronda);
@@ -242,7 +251,7 @@ public class PantallaJuego implements Screen {
   		  }
 		  
 	      if (zombisGenerados == zombisPorOleada && zombies.size() == 0) {
-            Screen ss = new PantallaTienda(game, ronda, nave, score, velXAsteroides, cantAsteroides);
+            Screen ss = new PantallaTienda(game, ronda, nave, score, velXAsteroides, cantAsteroides, costoDano, costoVida);
 			game.setScreen(ss);
 			dispose();
 		  }

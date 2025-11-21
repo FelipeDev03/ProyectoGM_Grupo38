@@ -2,7 +2,6 @@ package io.github.GameSpace;
 
 import com.badlogic.gdx.graphics.Texture;
 
-// GM1.4: Clase hija 3 (Zombie Especial)
 public class ZombieTanque extends Zombie {
 
     public ZombieTanque(int x, int y, float speed, Texture tx) {

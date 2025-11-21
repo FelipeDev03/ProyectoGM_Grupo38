@@ -20,6 +20,7 @@ public class Nave4 {
     private boolean herido = false;
     private int tiempoHeridoMax=50;
     private int tiempoHerido;
+    private int danoDisparo = 1;
     
     public Nave4(int x, int y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala) {
     	sonidoHerido = soundChoque;
@@ -70,7 +71,7 @@ public class Nave4 {
             float startX = spr.getX() + spr.getOriginX();
             float startY = spr.getY() + spr.getOriginY();
 
-            Bullet bala = new Bullet(startX, startY, velX, velY, txBala);
+            Bullet bala = new Bullet(startX, startY, velX, velY, txBala, danoDisparo);
             juego.agregarBala(bala);
             soundBala.play();
         }
@@ -95,6 +96,18 @@ public class Nave4 {
     }
     public boolean estaHerido() {
  	   return herido;
+    }
+    
+    public void aumentarDano(int cantidad) {
+        this.danoDisparo += cantidad;
+    }
+    
+    public void setDano(int d) {
+        this.danoDisparo = d;
+    }
+    
+    public int getDanoDisparo() {
+        return this.danoDisparo;
     }
     
     public int getVidas() {return vidas;}
