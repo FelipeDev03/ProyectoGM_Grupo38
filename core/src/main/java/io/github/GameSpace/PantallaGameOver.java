@@ -15,11 +15,15 @@ public class PantallaGameOver implements Screen {
 	private SpaceNavigation game;
 	private OrthographicCamera camera;
 	private Viewport viewport;
-	private int rondaFinal;
+	private int rondaAlcanzada;
+	private int recordActual;
 
-	public PantallaGameOver(SpaceNavigation game, int rondaFinal) {
+	public PantallaGameOver(SpaceNavigation game) {
 		this.game = game;
-		this.rondaFinal = rondaFinal;
+		// Obtener datos del Singleton
+		GameManager gm = GameManager.getInstancia();
+		this.rondaAlcanzada = gm.getRonda();
+		this.recordActual = gm.getHighScore();
         
 		camera = new OrthographicCamera();
 		viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
@@ -34,16 +38,20 @@ public class PantallaGameOver implements Screen {
 
 		viewport.apply();
 		game.getBatch().begin();
-		boolean nuevoRecord = (rondaFinal >= game.getHighRonda());
+		boolean nuevoRecord = (rondaAlcanzada >= recordActual && rondaAlcanzada > 0);
 		game.getFont().draw(game.getBatch(), "Game Over !!!", 
 				0, 500, SpaceNavigation.WORLD_WIDTH, Align.center, false);
 		
-		game.getFont().draw(game.getBatch(), "Ronda Alcanzada: " + rondaFinal,
+		game.getFont().draw(game.getBatch(), "Ronda Alcanzada: " + rondaAlcanzada,
                 0, 400, SpaceNavigation.WORLD_WIDTH, Align.center, false);
 		
 		if (nuevoRecord) {
             game.getFont().draw(game.getBatch(), "¡Nuevo Record!",
                 0, 350, SpaceNavigation.WORLD_WIDTH, Align.center, false);
+        } else {
+        	// Mostrar récord actual si no fue superado
+        	game.getFont().draw(game.getBatch(), "Record Actual: " + recordActual,
+                    0, 350, SpaceNavigation.WORLD_WIDTH, Align.center, false);
         }
 		game.getFont().draw(game.getBatch(), "Haz click en cualquier lado para reintentar ...", 
                 0, 250, SpaceNavigation.WORLD_WIDTH, Align.center, true);
@@ -51,7 +59,8 @@ public class PantallaGameOver implements Screen {
 		game.getBatch().end();
 
 		if (Gdx.input.isTouched() || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY)) {
-			Screen ss = new PantallaJuego(game,1,3,0,1,1,10,1,250,150);
+			GameManager.getInstancia().resetearJuego(); // Resetear Manager antes de empezar
+			Screen ss = new PantallaJuego(game);
 			game.setScreen(ss);
 			dispose();
 		}

@@ -23,13 +23,7 @@ public class PantallaTienda implements Screen {
     private String mensajeFeedback = "";
     private float tiempoMensaje = 0;
     
-    // Datos del juego
-    private Nave4 nave;
-    private int score;
-    private int rondaActual;
-    private int velXActual;
-    private int cantZombisActual;
-    
+    // Listas mejoras
     private ArrayList<Comprable> todasLasMejoras;
     private ArrayList<Comprable> mejorasEnTienda;
     
@@ -40,25 +34,16 @@ public class PantallaTienda implements Screen {
     private Rectangle botonContinuar;
 
 
-    public PantallaTienda(SpaceNavigation game, int rondaActual, Nave4 nave, int score, int velXActual, int cantZombisActual, int costoDano, int costoVida) {
+    public PantallaTienda(SpaceNavigation game) {
         this.game = game;
         this.camera = new OrthographicCamera();
         this.viewport = new FitViewport(SpaceNavigation.WORLD_WIDTH, SpaceNavigation.WORLD_HEIGHT, camera);
-        
-        this.nave = nave;
-        this.score = score;
-        this.rondaActual = rondaActual;
-
-        this.velXActual = velXActual;
-        this.cantZombisActual = cantZombisActual;
 
         // En caso de agregar mejoras en posteriores updates
         todasLasMejoras = new ArrayList<>();
         mejoraVida = new MejoraVida();
-        mejoraVida.setCosto(costoVida);
         todasLasMejoras.add(mejoraVida);
         mejoraDano = new MejoraDano();
-        mejoraDano.setCosto(costoDano);
         todasLasMejoras.add(mejoraDano);
         
         // Seleccionar 2 aleatorias para mostrar
@@ -82,13 +67,14 @@ public class PantallaTienda implements Screen {
         camera.update();
         viewport.apply();
         game.getBatch().setProjectionMatrix(camera.combined);
-
+        // Obtenemos al Manager
+        GameManager gm = GameManager.getInstancia();
         game.getBatch().begin();
         
         // Títulos
-        game.getFont().draw(game.getBatch(), "Ronda " + rondaActual + " Superada!", 
+        game.getFont().draw(game.getBatch(), "Ronda " + (gm.getRonda()) + " Superada!", 
             0, 550, SpaceNavigation.WORLD_WIDTH, Align.center, false);
-        game.getFont().draw(game.getBatch(), "Puntos: " + score, 
+        game.getFont().draw(game.getBatch(), "Puntos: " + gm.getScore(), 
             0, 500, SpaceNavigation.WORLD_WIDTH, Align.center, false);
         if (tiempoMensaje > 0) {
             layout.setText(game.getFont(), mensajeFeedback, com.badlogic.gdx.graphics.Color.YELLOW, SpaceNavigation.WORLD_WIDTH, Align.center, false);
@@ -141,9 +127,11 @@ public class PantallaTienda implements Screen {
     }
     
     private void comprarMejora(Comprable mejora) {
-        if (score >= mejora.getCosto()) {
-            score -= mejora.getCosto();
-            mejora.aplicarMejora(nave, null); // Pasamos null porque estas mejoras no afectan a PantallaJuego
+    	GameManager gm = GameManager.getInstancia();
+    	
+        if (gm.getScore() >= mejora.getCosto()) {
+        	gm.restarPuntaje(mejora.getCosto());
+            mejora.aplicarMejora(null, null);
             
             // Si se compro
             mensajeFeedback = "¡Comprado: " + mejora.getNombre() + "!";
@@ -156,14 +144,9 @@ public class PantallaTienda implements Screen {
     }
     
     private void iniciarSiguienteRonda() {
-        int proximaRonda = rondaActual + 1;
-        // Aumentamos la dificultad para la siguiente ronda
-        int nuevaVelocidad = velXActual;
-        int nuevosZombis = cantZombisActual + 5;   // Aumenta la cantidad
+    	GameManager.getInstancia().avanzarRonda();
         
-        Screen ss = new PantallaJuego(game, proximaRonda, nave.getVidas(), score, 
-                        nuevaVelocidad, nuevaVelocidad, nuevosZombis, nave.getDanoDisparo(), 
-                        mejoraDano.getCosto(), mejoraVida.getCosto());
+        Screen ss = new PantallaJuego(game);
         game.setScreen(ss);
         dispose();
     }

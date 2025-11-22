@@ -24,12 +24,14 @@ public class SpaceNavigation extends Game {
 	}
 
 	public void render() {
-		super.render(); // important!
+		super.render();
 	}
 
 	public void dispose() {
 		batch.dispose();
 		font.dispose();
+		// Limpieza final de todos los assets cargados
+	    Recursos.getInstancia().dispose();
 	}
 
 	public SpriteBatch getBatch() {

@@ -53,11 +53,14 @@ public class Nave4 {
         if (!herido) {
             spr.draw(batch);
         } else {
-           spr.setX(spr.getX()+MathUtils.random(-2,2));
-           spr.draw(batch); 
-           spr.setX(spr.getX()); 
-           tiempoHerido--;
-           if (tiempoHerido<=0) herido = false;
+        	float xOriginal = spr.getX();
+        	spr.setColor(1, 0, 0, 1);
+            spr.setX(xOriginal+MathUtils.random(-2,2));
+            spr.draw(batch);
+            spr.setColor(1, 1, 1, 1);
+            spr.setX(xOriginal); 
+            tiempoHerido--;
+            if (tiempoHerido<=0) herido = false;
          }
         
         // LÓGICA DE DISPARO CON MOUSE
@@ -78,7 +81,15 @@ public class Nave4 {
     }
       
     public boolean checkCollision(Rectangle area) {
-        if(!herido && area.overlaps(spr.getBoundingRectangle())){
+    	// Ajuste hitbox
+    	float margen = 15f;
+    	Rectangle hitboxReducido = new Rectangle(
+    	        spr.getX() + margen, 
+    	        spr.getY() + margen, 
+    	        spr.getWidth() - (margen * 2), 
+    	        spr.getHeight() - (margen * 2)
+    	    );
+        if(!herido && hitboxReducido.overlaps(area)){
         	//actualizar vidas y herir
             vidas--;
             herido = true;
@@ -92,7 +103,7 @@ public class Nave4 {
     }
     
     public boolean estaDestruido() {
-       return !herido && destruida;
+       return destruida;
     }
     public boolean estaHerido() {
  	   return herido;

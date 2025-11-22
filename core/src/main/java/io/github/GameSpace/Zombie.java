@@ -31,11 +31,14 @@ public abstract class Zombie {
 
     public void update() {
         if (!active) return;
-
+        // objetivo
         float targetX = SpaceNavigation.WORLD_WIDTH / 2f;
         float targetY = SpaceNavigation.WORLD_HEIGHT / 2f;
+        // origen del zombi
+        float myCenterX = x + spr.getWidth() / 2;
+        float myCenterY = y + spr.getHeight() / 2;
 
-        float angulo = MathUtils.atan2(targetY - y, targetX - x);
+        float angulo = MathUtils.atan2(targetY - myCenterY, targetX - myCenterX);
         float angleDegrees = angulo * MathUtils.radiansToDegrees;
         spr.setRotation(angleDegrees - 90);
         float velX = MathUtils.cos(angulo) * speed;
