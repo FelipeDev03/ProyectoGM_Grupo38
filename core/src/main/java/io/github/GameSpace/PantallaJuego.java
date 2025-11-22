@@ -58,7 +58,8 @@ public class PantallaJuego implements Screen {
         nave.setDano(gm.getDanoJugador());
 		
 		this.r = new Random(); 
-		this.zombisPorOleada = 10 + (this.ronda * 5);
+		this.zombisPorOleada = 8 + (this.ronda * 3);
+		this.tiempoEntreSpawns = Math.max(0.5f, 1.5f - (this.ronda * 0.05f));
         this.zombisGenerados = 0;
         this.spawnTimer = 0; 
 	}
