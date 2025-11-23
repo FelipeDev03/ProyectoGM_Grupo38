@@ -1,34 +1,44 @@
-# GameSpace
+# Zombie Defense 🧟‍♂️🔫
 
-A [libGDX](https://libgdx.com/) project generated with [gdx-liftoff](https://github.com/libgdx/gdx-liftoff).
+**Zombie Defense** es un juego de supervivencia arcade de estilo *top-down shooter* desarrollado en Java utilizando el framework **LibGDX**. El objetivo es sobrevivir a oleadas infinitas de zombis, gestionando recursos económicos y mejorando estratégicamente el equipamiento del sobreviviente.
 
-This project was generated with a template including simple application launchers and an `ApplicationAdapter` extension that draws libGDX logo.
+## 📋 Descripción del Proyecto
 
-## Platforms
+Este proyecto es una aplicación de escritorio que simula un entorno de supervivencia. El jugador controla a un personaje en el centro de la pantalla que debe defenderse de enemigos que aparecen en los bordes y convergen hacia él. La dificultad escala progresivamente mediante un sistema de rondas, aumentando la cantidad y resistencia de los enemigos.
 
-- `core`: Main module with the application logic shared by all platforms.
-- `lwjgl3`: Primary desktop platform using LWJGL3; was called 'desktop' in older docs.
+### Características Principales
+* **Sistema de Oleadas Infinitas:** La dificultad y cantidad de enemigos aumentan con cada ronda sobrevivivida.
+* **Variedad de Enemigos:**
+    * *Normales:* Velocidad y salud estándar.
+    * *Rápidos:* Alta velocidad, baja salud (Aparecen desde Ronda 3).
+    * *Tanques:* Lentos pero con triple salud (Aparecen desde Ronda 5).
+* **Economía y Tienda:** Entre rondas, el jugador accede a una tienda para invertir los puntos ganados en:
+    * *Mejora de Daño:* Aumenta la potencia de disparo (Inversión a futuro).
+    * *Botiquín:* Recupera vidas perdidas (Gasto de emergencia).
+* **Persistencia de Datos:** Sistema de puntuación y récord (*High Score*) que persiste durante la sesión.
 
-## Gradle
+## 🛠️ Requisitos del Sistema
 
-This project uses [Gradle](https://gradle.org/) to manage dependencies.
-The Gradle wrapper was included, so you can run Gradle tasks using `gradlew.bat` or `./gradlew` commands.
-Useful Gradle tasks and flags:
+* **Java Development Kit (JDK):** Versión 8 o superior (Recomendado JDK 11+).
+* **Sistema Operativo:** Windows, macOS o Linux.
+* **Memoria RAM:** Mínimo 512MB asignados a la JVM.
 
-- `--continue`: when using this flag, errors will not stop the tasks from running.
-- `--daemon`: thanks to this flag, Gradle daemon will be used to run chosen tasks.
-- `--offline`: when using this flag, cached dependency archives will be used.
-- `--refresh-dependencies`: this flag forces validation of all dependencies. Useful for snapshot versions.
-- `build`: builds sources and archives of every project.
-- `cleanEclipse`: removes Eclipse project data.
-- `cleanIdea`: removes IntelliJ project data.
-- `clean`: removes `build` folders, which store compiled classes and built archives.
-- `eclipse`: generates Eclipse project data.
-- `idea`: generates IntelliJ project data.
-- `lwjgl3:jar`: builds application's runnable jar, which can be found at `lwjgl3/build/libs`.
-- `lwjgl3:run`: starts the application.
-- `test`: runs unit tests (if any).
+## 🚀 Instrucciones de Instalación y Ejecución
 
-Note that most tasks that are not specific to a single project can be run with `name:` prefix, where the `name` should be replaced with the ID of a specific project.
-For example, `core:clean` removes `build` folder only from the `core` project.
-# ProyectoGM_Grupo38
+El proyecto utiliza **LWJGL3** como backend gráfico.
+
+### Opción 1: Ejecutar desde IDE (Eclipse, IntelliJ, NetBeans)
+1.  Importar el proyecto como **Gradle Project**.
+2.  Navegar en el explorador de archivos a la ruta: `lwjgl3/src/main/java/io/github/GameSpace/lwjgl3/`.
+3.  Localizar la clase **`DesktopLauncher.java`**.
+4.  Hacer clic derecho -> **Run As** -> **Java Application**.
+
+### Opción 2: Ejecutar vía Terminal (Gradle)
+Abrir una terminal en la raíz del proyecto y ejecutar:
+
+```bash
+# Windows
+gradlew desktop:run
+
+# Mac/Linux
+./gradlew desktop:run
