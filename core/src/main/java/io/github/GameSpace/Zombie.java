@@ -29,46 +29,45 @@ public abstract class Zombie {
         this.health = health;
     }
 
-    public void update() {
+    public final void update() {
         if (!active) return;
-        // objetivo
+        perseguirJugador();
+        comportamientoEspecial();
+    }
+    protected void perseguirJugador() {
         float targetX = SpaceNavigation.WORLD_WIDTH / 2f;
         float targetY = SpaceNavigation.WORLD_HEIGHT / 2f;
-        // origen del zombi
+        
         float myCenterX = x + spr.getWidth() / 2;
         float myCenterY = y + spr.getHeight() / 2;
 
         float angulo = MathUtils.atan2(targetY - myCenterY, targetX - myCenterX);
         float angleDegrees = angulo * MathUtils.radiansToDegrees;
         spr.setRotation(angleDegrees - 90);
+        
         float velX = MathUtils.cos(angulo) * speed;
         float velY = MathUtils.sin(angulo) * speed;
 
         x += velX;
         y += velY;
-        
         spr.setPosition(x, y);
+    }
+    protected void comportamientoEspecial() {
+        // Por defecto, no hace nada.
     }
 
     public void draw(SpriteBatch batch) {
-        if (!active) return;
-        spr.draw(batch);
+        if (active) {
+        	spr.draw(batch);
+        }
     }
 
     public void hit(int damage) {
         this.health -= damage;
-        if (this.health <= 0) {
-            this.active = false; 
-        }
+        if (this.health <= 0) active = false; 
     }
 
-    public boolean isActive() {
-        return active;
-    }
-    
-    public Rectangle getArea() {
-        return spr.getBoundingRectangle();
-    }
-
+    public boolean isActive() { return active; }
+    public Rectangle getArea() { return spr.getBoundingRectangle(); }
     public abstract void onDeath(); 
 }

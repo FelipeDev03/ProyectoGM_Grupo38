@@ -15,22 +15,21 @@ public class Nave4 {
     private int vidas = 3;
     private Sprite spr;
     private Sound sonidoHerido;
-    private Sound soundBala;
-    private Texture txBala;
+    private EstrategiaDisparo estrategia;
     private boolean herido = false;
     private int tiempoHeridoMax=50;
     private int tiempoHerido;
     private int danoDisparo = 1;
     
-    public Nave4(int x, int y, Texture tx, Sound soundChoque, Texture txBala, Sound soundBala) {
+    public Nave4(int x, int y, Texture tx, Sound soundChoque) {
     	sonidoHerido = soundChoque;
-    	this.soundBala = soundBala;
-    	this.txBala = txBala;
     	spr = new Sprite(tx);
     	spr.setSize(64, 64); // tamaño visible
     	spr.setOriginCenter();
     	spr.setPosition(x, y);
+    	this.estrategia = new DisparoSimple();
     }
+    
     
     public void draw(SpriteBatch batch, PantallaJuego juego){
 
@@ -65,19 +64,10 @@ public class Nave4 {
         
         // LÓGICA DE DISPARO CON MOUSE
         if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {   
-            
-            float velBala = 10.0f;
-            
-            float velX = MathUtils.cos(angleRadians) * velBala;
-            float velY = MathUtils.sin(angleRadians) * velBala;
-
-            float startX = spr.getX() + spr.getOriginX();
+        	float startX = spr.getX() + spr.getOriginX();
             float startY = spr.getY() + spr.getOriginY();
-
-            Bullet bala = new Bullet(startX, startY, velX, velY, txBala, danoDisparo);
-            juego.agregarBala(bala);
-            soundBala.play();
-        }
+            estrategia.disparar(startX, startY, angleRadians, juego);
+        }  
     }
       
     public boolean checkCollision(Rectangle area) {
@@ -125,4 +115,7 @@ public class Nave4 {
     public int getX() {return (int) spr.getX();}
     public int getY() {return (int) spr.getY();}
 	public void setVidas(int vidas2) {vidas = vidas2;}
+	public void setEstrategia(EstrategiaDisparo nuevaEstrategia) {
+        this.estrategia = nuevaEstrategia;
+    }
 }
